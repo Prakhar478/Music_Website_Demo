@@ -170,6 +170,7 @@ export default function App() {
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const [previewProgress, setPreviewProgress] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const rippleCanvasRef = useRef(null);
   const particlesCanvasRef = useRef(null);
@@ -263,13 +264,19 @@ export default function App() {
     audioRef.current.load();
   };
 
-  const playPreview = async (idx) => {
-    setPreviewLoading(true);
-    setPreviewPlaying(false);
-    setPreviewIdx(idx);
-    setPreviewProgress(0);
+const playPreview = async (idx) => {
     clearInterval(previewIntervalRef.current);
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+    if (audioRef.current) { 
+      audioRef.current.pause(); 
+      audioRef.current.oncanplaythrough = null;
+      audioRef.current.onerror = null;
+      audioRef.current.onended = null;
+      audioRef.current.src = ''; 
+    }
+    setPreviewPlaying(false);
+    setPreviewProgress(0);
+    setPreviewIdx(idx);
+    setPreviewLoading(true);
 
     let { url, artwork } = saavnTracks[idx];
     if (!url) {
@@ -321,6 +328,18 @@ export default function App() {
     raf=requestAnimationFrame(tick);
     return ()=>cancelAnimationFrame(raf);
   }, []);
+  // Preload all artwork on mount
+useEffect(() => {
+  SONG_QUERIES.forEach((_, i) => {
+    fetchSaavnTrack(i).then(result => {
+      if (result?.artwork) {
+        setSaavnTracks(prev => prev.map((t, idx) => 
+          idx === i ? { ...t, artwork: result.artwork } : t
+        ));
+      }
+    });
+  });
+}, []);
 
   useEffect(() => {
     let mx=0,my=0,rx=0,ry=0,tx2=0,ty2=0;
@@ -344,10 +363,11 @@ export default function App() {
     animR();
 
     // PARTICLES
+    const isMobile = window.innerWidth < 768;
     const pc=particlesCanvasRef.current, pctx=pc.getContext('2d');
     let particles=[];
     const resizeP=()=>{pc.width=pc.offsetWidth;pc.height=pc.offsetHeight;};
-    const initP=()=>{ particles=[]; for(let i=0;i<55;i++) particles.push({x:Math.random()*pc.width,y:Math.random()*pc.height,r:Math.random()*1.8+.4,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,c:Math.random()>.5?'rgba(13,148,136,':'rgba(249,115,22,',a:Math.random()*.4+.1}); };
+    const initP=()=>{ particles=[]; const count=isMobile?20:55; for(let i=0;i<count;i++) particles.push({x:Math.random()*pc.width,y:Math.random()*pc.height,r:Math.random()*1.8+.4,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,c:Math.random()>.5?'rgba(13,148,136,':'rgba(249,115,22,',a:Math.random()*.4+.1}); };
     resizeP();initP();
     let pId;
     const animP=()=>{ pctx.clearRect(0,0,pc.width,pc.height); particles.forEach(p=>{ pctx.beginPath();pctx.arc(p.x,p.y,p.r,0,Math.PI*2);pctx.fillStyle=p.c+p.a+')';pctx.fill(); p.x+=p.vx;p.y+=p.vy; if(p.x<0)p.x=pc.width;if(p.x>pc.width)p.x=0;if(p.y<0)p.y=pc.height;if(p.y>pc.height)p.y=0; }); pId=requestAnimationFrame(animP); };
@@ -422,9 +442,20 @@ export default function App() {
         </div>
         <div className="nav-right">
           <button className="btn-g">Log In</button>
-          <button className="btn-p" onClick={()=>showToast('Welcome to SŌNIC! 🎵')}>Get Started</button>
+          <button className="btn-p" onClick={()=>showToast('Play Any Song! 🎵')}>Get Started</button>
+          <button className="nav-burger" onClick={()=>setMobileMenuOpen(p=>!p)} aria-label="Menu">
+            <span></span><span></span><span></span>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile nav drawer */}
+      <div className={`mobile-nav ${mobileMenuOpen?'open':''}`}>
+        <a href="#trending" onClick={e=>{e.preventDefault();document.getElementById('trending').scrollIntoView({behavior:'smooth'});setMobileMenuOpen(false);}}>Discover</a>
+        <a href="#featured" onClick={e=>{e.preventDefault();document.getElementById('featured').scrollIntoView({behavior:'smooth'});setMobileMenuOpen(false);}}>Artists</a>
+        <a href="#color-theory" onClick={e=>{e.preventDefault();document.getElementById('color-theory').scrollIntoView({behavior:'smooth'});setMobileMenuOpen(false);}}>Color Theory</a>
+        <a href="#cta" onClick={e=>{e.preventDefault();document.getElementById('cta').scrollIntoView({behavior:'smooth'});setMobileMenuOpen(false);}}>Full Tool</a>
+      </div>
 
       {/* ── HERO ── */}
       <section className="hero" onMouseMove={handleHeroMouseMove} onMouseLeave={()=>setHeroTilt({x:0,y:0})}>
@@ -438,7 +469,9 @@ export default function App() {
           </h1>
           <p>Stream unlimited music. Discover new artists. Build your perfect playlist. All in one place.</p>
           <div className="hero-actions">
-            <button className="btn-hero" onClick={()=>playTrack(0)}><span className="text">Start Listening ▶</span></button>
+            <button className="btn-hero" onClick={()=>{ 
+  document.getElementById('trending').scrollIntoView({behavior:'smooth'}); 
+}}><span className="text">Start Listening ▶</span></button>
             <button className="btn-hero2" onClick={()=>document.getElementById('trending').scrollIntoView({behavior:'smooth'})}>Explore Charts</button>
           </div>
           <div className="hero-stats">
@@ -493,7 +526,7 @@ export default function App() {
             <h2>LUNA <span>VEX</span></h2>
             <p>Pushing the boundaries of electronic music with a signature blend of teal-soaked basslines and fiery melodic bursts.</p>
             <div className="feat-tags"><span className="tag-t">Electronic</span><span className="tag-o">Synthwave</span><span className="tag-t">Ambient</span><span className="tag-o">Live Sets</span></div>
-            <button className="btn-hero" onClick={()=>playTrack(0)}><span className="text">▶ Play Top Track</span></button>
+            <button className="btn-hero" onClick={()=>{ document.getElementById('trending').scrollIntoView({behavior:'smooth'}); setTimeout(()=>playPreview(0), 900); }}><span className="text">▶ Play Top Track</span></button>
           </div>
           <div className="feat-visual"><div className="vinyl-rings"></div><div className="artist-circle" onClick={()=>showToast('Luna Vex — Artist of the Month 🎤')}>🎤</div></div>
         </div>
