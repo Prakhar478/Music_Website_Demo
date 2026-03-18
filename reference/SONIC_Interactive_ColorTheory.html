@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SŌNIC — Music Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pr:#0D9488; --pr-lt:#14B8A6; --pr-dk:#0A6E65;
+  --sc:#F97316; --sc-lt:#FB923C;
+  --ac:#FCD34D;
+  --bg:#0A0F0F; --sf:#111A1A; --sf2:#162424;
+  --tx:#E8F4F4; --tm:#6B9999;
+  --bd:rgba(13,148,136,.18);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none}
+
+/* CURSOR */
+#cur{position:fixed;width:12px;height:12px;background:var(--sc);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .08s,background .25s,width .2s,height .2s;box-shadow:0 0 10px 3px rgba(249,115,22,.65),0 0 22px 6px rgba(249,115,22,.2)}
+#cur-ring{position:fixed;width:38px;height:38px;border:1.5px solid rgba(13,148,136,.75);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .4s cubic-bezier(.17,.67,.35,1.3),height .4s cubic-bezier(.17,.67,.35,1.3),border-color .3s,opacity .3s}
+#cur-trail{position:fixed;width:5px;height:5px;background:rgba(249,115,22,.28);border-radius:50%;pointer-events:none;z-index:9997;transform:translate(-50%,-50%)}
+body.cur-hover #cur{width:16px;height:16px;background:var(--pr-lt);box-shadow:0 0 16px 5px rgba(13,148,136,.75),0 0 36px 12px rgba(13,148,136,.18)}
+body.cur-hover #cur-ring{width:54px;height:54px;border-color:var(--sc);border-width:2px}
+/* BG RIPPLE CANVAS */
+#bg-ripple{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:1}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:68px;background:rgba(10,15,15,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd)}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.12em}
+.nav-logo span{color:var(--sc)}
+.nav-links{display:flex;gap:32px}
+.nav-links a{font-size:.82rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--tm);text-decoration:none;transition:color .2s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:var(--sc);transform:scaleX(0);transition:transform .2s;transform-origin:left}
+.nav-links a:hover{color:var(--tx)}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav-right{display:flex;gap:12px;align-items:center}
+.btn-g{background:none;border:1px solid var(--bd);color:var(--tm);padding:8px 20px;border-radius:2px;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;cursor:none;transition:all .2s;font-family:'DM Sans',sans-serif}
+.btn-g:hover{border-color:var(--pr);color:var(--pr-lt)}
+.btn-p{background:var(--sc);color:#0A0F0F;border:none;padding:8px 22px;border-radius:2px;font-size:.8rem;letter-spacing:.08em;font-weight:600;text-transform:uppercase;cursor:none;transition:all .2s;font-family:'DM Sans',sans-serif}
+.btn-p:hover{background:var(--sc-lt);transform:translateY(-1px)}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:120px 48px 100px;overflow:hidden}
+.hero-orb{position:absolute;right:-80px;top:50%;transform:translateY(-50%);width:680px;height:680px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,.13) 0%,rgba(13,148,136,.07) 48%,transparent 72%);animation:orb-pulse 7s ease-in-out infinite}
+.hero-ring1{position:absolute;right:-50px;top:50%;transform:translateY(-50%);width:540px;height:540px;border-radius:50%;border:1px solid rgba(249,115,22,.14);animation:spin1 22s linear infinite}
+.hero-ring2{position:absolute;right:30px;top:50%;transform:translateY(-50%);width:380px;height:380px;border-radius:50%;border:1px dashed rgba(13,148,136,.18);animation:spin1 15s linear infinite reverse}
+@keyframes orb-pulse{0%,100%{opacity:.6;transform:translateY(-50%) scale(1)}50%{opacity:1;transform:translateY(-50%) scale(1.05)}}
+@keyframes spin1{from{transform:translateY(-50%) rotate(0deg)}to{transform:translateY(-50%) rotate(360deg)}}
+
+/* Particles canvas */
+#particles{position:absolute;inset:0;z-index:0;pointer-events:none}
+
+.hero-content{position:relative;z-index:2;max-width:620px}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);padding:6px 14px;border-radius:2px;font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--sc);margin-bottom:28px;animation:fade-up .6s ease both}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--sc);animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,8vw,7.5rem);line-height:.92;letter-spacing:.02em;margin-bottom:24px;animation:fade-up .6s .1s ease both}
+.hero h1 .t{color:var(--pr-lt)} .hero h1 .o{color:var(--sc)}
+.hero p{font-size:1.05rem;line-height:1.7;color:var(--tm);max-width:440px;margin-bottom:40px;animation:fade-up .6s .2s ease both}
+.hero-actions{display:flex;gap:16px;align-items:center;animation:fade-up .6s .3s ease both}
+.btn-hero{
+  --c1:#0A0F0F;
+  --c2:#F97316;
+  --size-letter:15px;
+  padding:0.72em 1.6em;
+  font-size:var(--size-letter);
+  background-color:transparent;
+  border:calc(var(--size-letter)/6) solid var(--c2);
+  border-radius:0.2em;
+  cursor:none;
+  overflow:hidden;
+  position:relative;
+  transition:300ms cubic-bezier(0.83,0,0.17,1);
+  font-family:'DM Sans',sans-serif;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-hero>.text{font-weight:700;color:var(--c2);position:relative;z-index:1;transition:color 700ms cubic-bezier(0.83,0,0.17,1)}
+.btn-hero::after{content:"";width:0;height:calc(300% + 1em);position:absolute;translate:-50% -50%;inset:50%;rotate:30deg;background-color:var(--c2);transition:1000ms cubic-bezier(0.83,0,0.17,1)}
+.btn-hero:hover>.text{color:var(--c1)}
+.btn-hero:hover::after{width:calc(120% + 1em)}
+.btn-hero:active{scale:0.98;filter:brightness(0.9)}
+.btn-hero2{padding:14px 36px;font-size:.9rem;letter-spacing:.1em;font-weight:500;text-transform:uppercase;background:none;color:var(--pr-lt);border:1px solid var(--pr);border-radius:2px;cursor:none;transition:all .25s;font-family:'DM Sans',sans-serif}
+.btn-hero2:hover{background:rgba(13,148,136,.1);transform:translateY(-2px)}
+.hero-stats{display:flex;gap:40px;margin-top:56px;animation:fade-up .6s .4s ease both}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em}
+.stat-num span{color:var(--sc)}
+.stat-lbl{font-size:.75rem;color:var(--tm);text-transform:uppercase;letter-spacing:.1em}
+@keyframes fade-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* MINI PLAYER (bottom fixed) */
+#mini-player{position:fixed;bottom:0;left:0;right:0;z-index:300;background:rgba(10,15,15,.96);backdrop-filter:blur(24px);border-top:1px solid var(--bd);padding:0 48px;height:76px;display:flex;align-items:center;gap:24px;transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1)}
+#mini-player.visible{transform:translateY(0)}
+.mp-art{width:48px;height:48px;border-radius:4px;flex-shrink:0;position:relative;overflow:hidden}
+.mp-art-inner{width:100%;height:100%;background:linear-gradient(135deg,var(--pr),var(--sc));display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.mp-spin{animation:vinyl-spin 3s linear infinite;animation-play-state:paused}
+.mp-spin.playing{animation-play-state:running}
+@keyframes vinyl-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.mp-info{flex:1;min-width:0}
+.mp-title{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-artist{font-size:.75rem;color:var(--tm)}
+.mp-controls{display:flex;align-items:center;gap:16px}
+.mp-btn{background:none;border:none;color:var(--tm);cursor:none;font-size:1.1rem;transition:color .2s;padding:4px}
+.mp-btn:hover{color:var(--tx)}
+.mp-play{width:40px;height:40px;border-radius:50%;background:var(--sc);border:none;color:#0A0F0F;cursor:none;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.mp-play:hover{background:var(--sc-lt);transform:scale(1.08)}
+.mp-progress-wrap{flex:1;max-width:360px;display:flex;align-items:center;gap:12px}
+.mp-time{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--tm);width:32px;text-align:center}
+.mp-bar{flex:1;height:4px;background:var(--sf2);border-radius:2px;cursor:none;position:relative}
+.mp-bar-fill{height:100%;background:linear-gradient(90deg,var(--pr),var(--sc));border-radius:2px;pointer-events:none;transition:width .5s linear}
+.mp-bar-thumb{position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:var(--sc);opacity:0;transition:opacity .2s}
+.mp-bar:hover .mp-bar-thumb{opacity:1}
+.mp-vol{display:flex;align-items:center;gap:8px}
+.mp-vol-bar{width:80px;height:4px;background:var(--sf2);border-radius:2px;cursor:none;position:relative}
+.mp-vol-fill{height:100%;width:70%;background:var(--pr);border-radius:2px}
+.mp-like{background:none;border:none;color:var(--tm);cursor:none;font-size:1.1rem;transition:all .2s;padding:4px}
+.mp-like.liked{color:#FF6B6B;transform:scale(1.15)}
+
+/* TRENDING */
+.trending{padding:80px 48px;background:var(--sf);position:relative;z-index:1}
+.sec-tag{font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--pr-lt);margin-bottom:10px;font-family:'Space Mono',monospace}
+.sec-tag::before{content:'// ';color:var(--sc)}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.2rem,4vw,3.5rem);letter-spacing:.03em;line-height:1;margin-bottom:40px}
+.tracks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
+.track-card{background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:20px;transition:all .28s;position:relative;overflow:hidden;cursor:none}
+.track-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(13,148,136,.06),rgba(249,115,22,.06));opacity:0;transition:opacity .28s}
+.track-card:hover{border-color:rgba(13,148,136,.45);transform:translateY(-4px);box-shadow:0 14px 44px rgba(0,0,0,.35)}
+.track-card:hover::before{opacity:1}
+.track-card.playing{border-color:var(--sc);box-shadow:0 0 0 1px rgba(249,115,22,.3),0 14px 44px rgba(249,115,22,.15)}
+.track-art{width:100%;aspect-ratio:1;border-radius:4px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative;overflow:hidden;transition:transform .28s}
+.track-card:hover .track-art{transform:scale(1.03)}
+.play-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;border-radius:4px}
+.play-overlay-btn{width:52px;height:52px;border-radius:50%;background:var(--sc);display:flex;align-items:center;justify-content:center;font-size:1.3rem;transform:scale(.8);transition:transform .2s}
+.track-card:hover .play-overlay{opacity:1}
+.track-card:hover .play-overlay-btn{transform:scale(1)}
+.art1{background:linear-gradient(135deg,#0D9488,#F97316)}
+.art2{background:linear-gradient(135deg,#F97316,#FCD34D)}
+.art3{background:linear-gradient(135deg,#0D9488,#111A1A,#F97316)}
+.art4{background:linear-gradient(135deg,#FCD34D,#F97316,#0D9488)}
+.art5{background:linear-gradient(135deg,#14B8A6,#F97316)}
+.track-name{font-weight:600;font-size:.95rem;margin-bottom:4px}
+.track-by{font-size:.8rem;color:var(--tm);margin-bottom:12px}
+.track-meta{display:flex;justify-content:space-between;align-items:center}
+.track-plays{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--tm)}
+.track-genre{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:2px;background:rgba(13,148,136,.15);color:var(--pr-lt);border:1px solid rgba(13,148,136,.25)}
+.track-rank{position:absolute;top:12px;right:12px;font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:rgba(249,115,22,.28);letter-spacing:.05em}
+.wave-anim{display:flex;gap:3px;align-items:flex-end;height:16px;margin-top:8px}
+.wave-bar{width:3px;border-radius:2px;background:var(--sc);animation:wave 0.9s ease-in-out infinite}
+.wave-bar:nth-child(2){animation-delay:.15s}
+.wave-bar:nth-child(3){animation-delay:.3s}
+.wave-bar:nth-child(4){animation-delay:.15s}
+@keyframes wave{0%,100%{height:4px}50%{height:14px}}
+
+/* FEATURED */
+.featured{padding:80px 48px;position:relative;z-index:1}
+.featured-inner{display:grid;grid-template-columns:1fr 1.2fr;gap:60px;align-items:center;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:56px;position:relative;overflow:hidden}
+.featured-inner::before{content:'';position:absolute;right:-100px;bottom:-100px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,.09) 0%,transparent 65%)}
+.feat-label{font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--sc);margin-bottom:12px}
+.featured h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,5vw,5rem);line-height:.95;letter-spacing:.02em;margin-bottom:20px}
+.featured h2 span{color:var(--pr-lt)}
+.featured p{font-size:.95rem;color:var(--tm);line-height:1.7;margin-bottom:28px}
+.feat-tags{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px}
+.tag-t{padding:5px 14px;border-radius:40px;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;background:rgba(13,148,136,.15);color:var(--pr-lt);border:1px solid rgba(13,148,136,.3)}
+.tag-o{padding:5px 14px;border-radius:40px;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;background:rgba(249,115,22,.12);color:var(--sc);border:1px solid rgba(249,115,22,.25)}
+.feat-visual{position:relative;display:flex;justify-content:center;align-items:center}
+.artist-circle{width:260px;height:260px;border-radius:50%;background:linear-gradient(135deg,var(--pr),var(--sc));display:flex;align-items:center;justify-content:center;font-size:5rem;box-shadow:0 0 60px rgba(249,115,22,.22),0 0 120px rgba(13,148,136,.12);transition:box-shadow .4s}
+.artist-circle:hover{box-shadow:0 0 80px rgba(249,115,22,.4),0 0 160px rgba(13,148,136,.2)}
+.vinyl-rings{position:absolute;inset:-44px;border-radius:50%;border:1px solid rgba(13,148,136,.12);animation:spin1 18s linear infinite;pointer-events:none}
+.vinyl-rings::before{content:'';position:absolute;inset:14px;border-radius:50%;border:1px dashed rgba(249,115,22,.14)}
+
+/* ==========================================
+   COLOR THEORY EXPLAINER
+   ========================================== */
+.ct-section{position:relative;z-index:1}
+
+.modality-banner{background:linear-gradient(135deg,var(--pr-dk),#0A0F0F);border-top:3px solid var(--sc);border-bottom:1px solid var(--bd);padding:40px 48px;display:flex;align-items:center;justify-content:space-between;gap:40px}
+.mb-badge{display:inline-block;background:var(--sc);color:#0A0F0F;font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;padding:4px 12px;border-radius:2px;margin-bottom:14px;font-weight:700}
+.mb-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.05em;margin-bottom:6px}
+.mb-sub{font-size:.85rem;color:var(--tm);font-family:'Space Mono',monospace}
+.mb-right{display:flex;gap:24px}
+.mb-stat-num{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--sc)}
+.mb-stat-lbl{font-size:.7rem;color:var(--tm);text-transform:uppercase;letter-spacing:.1em}
+
+.part-lbl{display:flex;align-items:center;gap:14px;margin-bottom:40px;padding-bottom:20px;border-bottom:1px solid var(--bd)}
+.part-badge{background:var(--sc);color:#0A0F0F;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;padding:6px 16px;border-radius:3px}
+.part-text{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.05em;color:var(--tm)}
+.part-marks{font-family:'Space Mono',monospace;font-size:.75rem;color:var(--pr-lt);margin-left:auto}
+
+.explain-block{padding:72px 48px;border-bottom:1px solid var(--bd)}
+
+/* Interactive Color Wheel */
+.iw-wrap{display:grid;grid-template-columns:auto 1fr;gap:56px;align-items:start;margin-bottom:60px}
+.iw-left{display:flex;flex-direction:column;align-items:center;gap:16px}
+#colorWheelCanvas{border-radius:50%;cursor:none;transition:filter .2s}
+#colorWheelCanvas:hover{filter:drop-shadow(0 0 16px rgba(249,115,22,.3))}
+.iw-tooltip{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 16px;font-family:'Space Mono',monospace;font-size:.75rem;color:var(--tx);min-width:200px;text-align:center;transition:all .2s}
+.iw-tooltip .th{color:var(--sc);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.iw-right h3{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:.04em;margin-bottom:16px}
+.iw-right h3 span{color:var(--sc)}
+.lead-t{font-size:1.05rem;line-height:1.75;margin-bottom:20px}
+.body-t{font-size:.9rem;line-height:1.8;color:var(--tm);margin-bottom:20px}
+.cs-table{width:100%;border-collapse:collapse;margin:24px 0}
+.cs-table th{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--tm);padding:10px 14px;text-align:left;border-bottom:1px solid var(--bd)}
+.cs-table td{padding:12px 14px;font-size:.85rem;border-bottom:1px solid rgba(13,148,136,.08)}
+.cs-table tr:last-child td{border-bottom:none}
+.sw-sm{width:24px;height:24px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:6px}
+.tip-box{background:rgba(13,148,136,.08);border:1px solid rgba(13,148,136,.2);border-radius:6px;padding:18px 20px;margin-top:8px}
+.tip-box .th{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--pr-lt);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+
+/* Interactive Scheme Switcher */
+.scheme-switcher{margin-bottom:16px}
+.scheme-tabs{display:flex;gap:0;border:1px solid var(--bd);border-radius:6px;overflow:hidden;margin-bottom:28px}
+.stab{flex:1;padding:12px;font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;background:none;border:none;border-right:1px solid var(--bd);color:var(--tm);cursor:none;transition:all .25s;text-align:center}
+.stab:last-child{border-right:none}
+.stab:hover{background:rgba(13,148,136,.07);color:var(--tx)}
+.stab.active{background:var(--sc);color:#0A0F0F;font-weight:700}
+.scheme-panels{}
+.scheme-panel{display:none;animation:fade-up .4s ease both}
+.scheme-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.sp-info{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:28px}
+.sp-num{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--sc);letter-spacing:.15em;margin-bottom:8px}
+.sp-name{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.04em;margin-bottom:14px}
+.sp-swatches{display:flex;gap:6px;margin-bottom:16px}
+.sp-sw{height:36px;border-radius:3px;flex:1}
+.sp-desc{font-size:.84rem;line-height:1.75;color:var(--tm);margin-bottom:12px}
+.sp-example{font-size:.78rem;color:var(--tm);font-style:italic;border-left:2px solid var(--pr);padding-left:10px}
+.sp-visual{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:28px;display:flex;flex-direction:column;gap:16px}
+.sp-vis-title{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--tm);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.sp-wheel-mini{width:120px;height:120px;margin:0 auto}
+.why-active{background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:6px;padding:14px;margin-top:12px}
+.why-active-lbl{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--sc);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.why-active p{font-size:.8rem;line-height:1.6;color:var(--tm)}
+
+/* PALETTE */
+.palette-section{padding:72px 48px;background:var(--sf);border-bottom:1px solid var(--bd)}
+.sec-h2{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.05em;margin-bottom:32px}
+.palette-bar{display:flex;border-radius:10px;overflow:hidden;margin-bottom:40px;box-shadow:0 8px 40px rgba(0,0,0,.35);height:160px}
+.pb-swatch{flex:1;padding:20px 16px;display:flex;flex-direction:column;justify-content:flex-end;cursor:none;transition:flex .35s ease;position:relative;overflow:hidden}
+.pb-swatch:hover{flex:2}
+.pb-swatch::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.0);transition:background .2s}
+.pb-swatch:hover::after{background:rgba(0,0,0,.1)}
+.pb-role{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;opacity:.7}
+.pb-name{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em;margin-bottom:3px}
+.pb-hex{font-family:'Space Mono',monospace;font-size:.65rem;opacity:.75}
+.pd-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:40px}
+.pd-card{background:var(--bg);border:1px solid var(--bd);border-radius:8px;overflow:hidden;transition:transform .25s,box-shadow .25s;cursor:none}
+.pd-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.pd-sw{height:80px}
+.pd-body{padding:14px}
+.pd-role{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:5px}
+.pd-role.p{color:var(--pr-lt)}.pd-role.s{color:var(--sc)}.pd-role.a{color:var(--ac)}.pd-role.b{color:#6B9999}.pd-role.su{color:#8BBFBF}
+.pd-name{font-weight:600;font-size:.88rem;margin-bottom:4px}
+.pd-hex{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--tm);margin-bottom:2px}
+.pd-rgb{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--tm)}
+.pd-use{font-size:.72rem;color:var(--tm);margin-top:8px;line-height:1.5;border-top:1px solid var(--bd);padding-top:8px}
+
+/* RGB MIXER */
+.rgb-section{padding:72px 48px;border-bottom:1px solid var(--bd)}
+.rgb-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.rgb-mixer{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:32px}
+.rgb-mixer h4{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.04em;margin-bottom:6px}
+.rgb-mixer-sub{font-size:.82rem;color:var(--tm);margin-bottom:24px}
+.rgb-preview{width:100%;height:120px;border-radius:8px;margin-bottom:24px;transition:background .15s;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.rgb-sliders{display:flex;flex-direction:column;gap:16px}
+.rgb-slider-row{display:flex;align-items:center;gap:14px}
+.rgb-slider-lbl{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;width:20px;flex-shrink:0}
+.rgb-slider-lbl.r{color:#FF6B6B}.rgb-slider-lbl.g{color:#6BFF9A}.rgb-slider-lbl.b{color:#6B9FFF}
+.rgb-slider{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;outline:none;cursor:none;transition:height .2s}
+.rgb-slider:hover{height:8px}
+.rgb-slider.r-sl{background:linear-gradient(90deg,#000,#FF0000)}
+.rgb-slider.g-sl{background:linear-gradient(90deg,#000,#00FF00)}
+.rgb-slider.b-sl{background:linear-gradient(90deg,#000,#0000FF)}
+.rgb-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;cursor:none;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.rgb-val-num{font-family:'Space Mono',monospace;font-size:.75rem;width:36px;text-align:right;flex-shrink:0}
+.rgb-presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.rgb-preset-btn{padding:6px 12px;border:1px solid var(--bd);border-radius:4px;background:none;color:var(--tm);font-size:.72rem;cursor:none;transition:all .2s;font-family:'Space Mono',monospace;letter-spacing:.06em}
+.rgb-preset-btn:hover{border-color:var(--sc);color:var(--sc)}
+.rgb-explanation{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:32px}
+.rgb-explanation h3{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.04em;margin-bottom:16px}
+.rgb-explanation h3 span{color:var(--pr-lt)}
+.rgb-mix-visual{position:relative;width:200px;height:170px;margin:24px auto}
+.rgb-c{position:absolute;width:120px;height:120px;border-radius:50%;mix-blend-mode:screen;opacity:.88}
+.rgb-c.r{background:#FF0000;left:5px;top:26px}
+.rgb-c.g{background:#00FF00;left:75px;top:26px}
+.rgb-c.b{background:#0000FF;left:40px;top:0}
+.our-rgb{margin-top:28px}
+.ocr-title{font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--pr-lt);margin-bottom:16px}
+.ocr-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px;border-radius:6px;background:var(--bg)}
+.ocr-sw{width:32px;height:32px;border-radius:4px;flex-shrink:0}
+.ocr-name{font-weight:600;font-size:.82rem;width:110px;flex-shrink:0}
+.ocr-bars{display:flex;gap:6px}
+.ocr-v{font-family:'Space Mono',monospace;font-size:.72rem;padding:3px 9px;border-radius:3px}
+.ocr-r{background:rgba(255,0,0,.12);color:#FF9999}
+.ocr-g{background:rgba(0,255,0,.07);color:#99FF99}
+.ocr-b{background:rgba(0,0,255,.1);color:#9999FF}
+
+/* APPLIED EVIDENCE */
+.applied-section{padding:72px 48px;background:var(--sf);border-bottom:1px solid var(--bd)}
+.applied-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.app-card{background:var(--bg);border:1px solid var(--bd);border-radius:8px;overflow:hidden;transition:transform .25s,box-shadow .25s}
+.app-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.app-thumb{padding:28px;background:var(--sf)}
+.app-cap{padding:18px 20px}
+.app-cap h4{font-weight:600;font-size:.92rem;margin-bottom:8px}
+.app-cap p{font-size:.8rem;color:var(--tm);line-height:1.65}
+.app-tag{display:inline-block;margin-top:10px;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:2px;background:rgba(13,148,136,.15);color:var(--pr-lt);border:1px solid rgba(13,148,136,.25)}
+
+/* Mini UI previews */
+.mn{background:rgba(10,15,15,.9);border-radius:6px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mn-logo{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em}
+.mn-logo span{color:var(--sc)}
+.mn-btns{display:flex;gap:6px}
+.mn-btn{padding:4px 10px;border-radius:2px;font-size:.65rem;letter-spacing:.06em}
+.mn-btn.o{background:var(--sc);color:#0A0F0F;font-weight:600}
+.mn-btn.t{border:1px solid var(--pr);color:var(--pr-lt)}
+.mn-hero{background:linear-gradient(135deg,rgba(13,148,136,.1),rgba(249,115,22,.08));border-radius:6px;padding:20px;text-align:center}
+.mn-ht{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;margin-bottom:4px}
+.mn-ht .o{color:var(--sc)}.mn-ht .t{color:var(--pr-lt)}
+.mn-sub{font-size:.75rem;color:var(--tm);margin-bottom:12px}
+.mn-cta{display:flex;gap:8px;justify-content:center}
+.mn-cb{padding:6px 14px;border-radius:2px;font-size:.7rem;font-weight:600}
+.mn-cb.o{background:var(--sc);color:#0A0F0F}
+.mn-cb.t{border:1px solid var(--pr);color:var(--pr-lt)}
+.mn-cards{display:flex;gap:8px;margin-bottom:10px}
+.mn-card{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:10px}
+.mn-card-art{width:100%;aspect-ratio:1;border-radius:3px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.mn-card-art.a1{background:linear-gradient(135deg,var(--pr),var(--sc))}
+.mn-card-art.a2{background:linear-gradient(135deg,var(--sc),var(--ac))}
+.mn-card-art.a3{background:linear-gradient(135deg,var(--pr-lt),var(--sc))}
+.mn-nm{font-size:.72rem;font-weight:600;margin-bottom:2px}
+.mn-sb{font-size:.63rem;color:var(--tm)}
+.mn-player{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px;display:flex;align-items:center;gap:10px}
+.mn-part{width:36px;height:36px;border-radius:3px;background:linear-gradient(135deg,var(--pr),var(--sc));flex-shrink:0}
+.mn-pi{flex:1}.mn-pn{font-size:.72rem;font-weight:600;margin-bottom:2px}.mn-pa{font-size:.63rem;color:var(--tm)}
+.mn-prog{height:2px;background:var(--sf2);border-radius:1px;margin-top:5px}
+.mn-pf{width:40%;height:100%;background:linear-gradient(90deg,var(--pr),var(--sc));border-radius:1px}
+.mn-play{width:28px;height:28px;border-radius:50%;background:var(--sc);display:flex;align-items:center;justify-content:center;color:#0A0F0F;font-size:.7rem;flex-shrink:0}
+
+/* IDENTIFICATION GRID */
+.id-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:28px}
+.id-item{text-align:center;padding:18px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.06)}
+.id-item.yes{background:rgba(249,115,22,.06);border-color:rgba(249,115,22,.2)}
+.id-icon{font-size:1.5rem;margin-bottom:8px}
+.id-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.06em;margin-bottom:6px}
+.id-name.yes{color:var(--sc)}
+.id-name.no{color:var(--tm)}
+.id-desc{font-size:.7rem;color:var(--tm);line-height:1.5}
+
+/* WHY BOX */
+.why-box{background:linear-gradient(135deg,rgba(249,115,22,.07),rgba(13,148,136,.07));border:1px solid rgba(249,115,22,.22);border-radius:10px;padding:36px;margin-top:32px}
+.why-box h4{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.04em;margin-bottom:16px;color:var(--sc)}
+.why-pts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.why-pt{display:flex;gap:12px;align-items:flex-start}
+.why-ic{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;margin-top:2px}
+.why-ic.t{background:rgba(13,148,136,.2)}.why-ic.o{background:rgba(249,115,22,.2)}
+.why-pt p{font-size:.83rem;line-height:1.65;color:var(--tm)}
+.why-pt strong{color:var(--tx);display:block;margin-bottom:3px;font-size:.88rem}
+
+/* CONCLUSION */
+.conclusion{background:linear-gradient(135deg,rgba(13,148,136,.1),rgba(249,115,22,.08));border:1px solid rgba(249,115,22,.2);border-radius:10px;padding:40px;margin:48px 48px}
+.conclusion h3{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.04em;margin-bottom:16px}
+.conclusion h3 span{color:var(--sc)}
+.conclusion p{font-size:.9rem;line-height:1.8;color:var(--tm);margin-bottom:16px}
+.con-pts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+.con-pt{background:rgba(0,0,0,.3);border-radius:6px;padding:16px;border-left:2px solid var(--pr)}
+.con-pt.s{border-left-color:var(--sc)}
+.con-lbl{font-family:'Space Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--pr-lt);margin-bottom:4px}
+.con-lbl.s{color:var(--sc)}
+.con-t{font-size:.8rem;color:var(--tm);line-height:1.6}
+
+
+/* ── THEORY CALLOUT ── */
+.theory-callout{display:flex;gap:20px;align-items:flex-start;background:linear-gradient(135deg,rgba(13,148,136,.07),rgba(249,115,22,.05));border:1px solid rgba(13,148,136,.22);border-radius:10px;padding:24px 28px;margin-bottom:36px}
+.tc-icon{font-size:2rem;flex-shrink:0;margin-top:2px}
+.tc-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.05em;color:var(--tx);margin-bottom:8px}
+.tc-body{font-size:.86rem;line-height:1.75;color:var(--tm)}
+.tc-body strong{color:var(--tx)}
+.tc-body span{font-style:normal}
+
+/* ── COLOR TYPE CARDS ── */
+.ct-card{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:18px 20px;transition:border-color .2s}
+.ct-card:hover{border-color:rgba(13,148,136,.4)}
+.ct-card-label{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--tm);margin-bottom:2px}
+.ct-card-desc{font-size:.78rem;line-height:1.65;color:var(--tm)}
+.ct-card-desc strong{color:var(--tx)}
+
+/* ── SCHEME THEORY BLOCKS ── */
+.scheme-theory-block{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:12px 14px}
+.stb-label{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pr-lt);margin-bottom:6px}
+.scheme-theory-block p{font-size:.78rem;line-height:1.65;color:var(--tm)}
+.scheme-theory-block p strong{color:var(--tx)}
+
+/* ── SCHEME VERDICT ── */
+.scheme-verdict{font-size:.77rem;line-height:1.55;border-radius:6px;padding:10px 14px}
+.scheme-verdict.yes{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.22);color:var(--sc)}
+.scheme-verdict.yes strong{color:var(--tx)}
+.scheme-verdict.no{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--tm)}
+
+/* ── WHY CARDS ── */
+.why-card{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:18px;display:flex;gap:12px;align-items:flex-start;transition:border-color .25s,transform .25s}
+.why-card:hover{border-color:rgba(13,148,136,.35);transform:translateY(-2px)}
+.wc-icon{font-size:1.4rem;flex-shrink:0;margin-top:1px}
+.wc-title{font-weight:600;font-size:.83rem;margin-bottom:4px;color:var(--tx)}
+.wc-body{font-size:.74rem;color:var(--tm);line-height:1.55}
+
+/* ── USE TAGS ── */
+.use-tag{padding:2px 9px;border-radius:3px;font-size:.67rem;letter-spacing:.06em}
+.use-tag.o{background:rgba(249,115,22,.15);color:var(--sc);border:1px solid rgba(249,115,22,.25)}
+.use-tag.t{background:rgba(13,148,136,.15);color:var(--pr-lt);border:1px solid rgba(13,148,136,.25)}
+.use-tag.g{background:linear-gradient(90deg,rgba(13,148,136,.15),rgba(249,115,22,.15));color:var(--tx);border:1px solid rgba(255,255,255,.1)}
+.use-tag.n{background:rgba(255,255,255,.06);color:var(--tm);border:1px solid rgba(255,255,255,.1)}
+
+/* FOOTER */
+footer{padding:40px 48px 32px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
+.foot-logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.1em}
+.foot-logo span{color:var(--sc)}
+.foot-note{font-size:.78rem;color:var(--tm);font-family:'Space Mono',monospace}
+.fdot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--pr);margin:0 8px;vertical-align:middle}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--pr);border-radius:2px}
+
+/* Toast */
+.toast{position:fixed;bottom:96px;right:32px;z-index:500;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:12px 18px;font-size:.82rem;display:flex;align-items:center;gap:10px;transform:translateX(120%);transition:transform .35s cubic-bezier(.16,1,.3,1);box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(0)}
+.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--sc);flex-shrink:0}
+</style>
+</head>
+<body>
+
+<canvas id="bg-ripple"></canvas>
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div id="cur-trail"></div>
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg">Now Playing!</span></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SŌ<span>N</span>IC</div>
+  <div class="nav-links">
+    <a href="#trending">Discover</a>
+    <a href="#trending">Charts</a>
+    <a href="#featured">Artists</a>
+    <a href="#color-theory">Color Theory</a>
+  </div>
+  <div class="nav-right">
+    <button class="btn-g">Log In</button>
+    <button class="btn-p" onclick="showToast('Welcome to SŌNIC! 🎵')">Get Started</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <canvas id="particles"></canvas>
+  <div class="hero-orb"></div>
+  <div class="hero-ring1"></div>
+  <div class="hero-ring2"></div>
+  <div class="hero-content">
+    <div class="hero-tag"><div class="live-dot"></div>Now Streaming</div>
+    <h1>FEEL THE<br><span class="t">BEAT</span> &<br><span class="o">VIBE</span></h1>
+    <p>Stream unlimited music. Discover new artists. Build your perfect playlist. All in one place.</p>
+    <div class="hero-actions">
+      <button class="btn-hero" onclick="playTrack(0)"><span class="text">Start Listening ▶</span></button>
+      <button class="btn-hero2" onclick="document.getElementById('trending').scrollIntoView({behavior:'smooth'})">Explore Charts</button>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-num" id="scount">0<span>M+</span></div><div class="stat-lbl">Songs</div></div>
+      <div><div class="stat-num" id="acount">0<span>M</span></div><div class="stat-lbl">Artists</div></div>
+      <div><div class="stat-num" id="gcount">0<span>K</span></div><div class="stat-lbl">Genres</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TRENDING -->
+<section class="trending" id="trending">
+  <div class="sec-tag">Charts</div>
+  <div class="sec-title">TRENDING NOW</div>
+  <div class="tracks-grid" id="tracks-grid"></div>
+</section>
+
+<!-- FEATURED -->
+<section class="featured" id="featured">
+  <div class="featured-inner">
+    <div>
+      <div class="feat-label">// Artist of the Month</div>
+      <h2>LUNA <span>VEX</span></h2>
+      <p>Pushing the boundaries of electronic music with a signature blend of teal-soaked basslines and fiery melodic bursts. Her latest album "Complementary" is topping charts worldwide.</p>
+      <div class="feat-tags">
+        <span class="tag-t">Electronic</span><span class="tag-o">Synthwave</span>
+        <span class="tag-t">Ambient</span><span class="tag-o">Live Sets</span>
+      </div>
+      <button class="btn-hero" onclick="playTrack(0)"><span class="text">▶ Play Top Track</span></button>
+    </div>
+    <div class="feat-visual">
+      <div class="vinyl-rings"></div>
+      <div class="artist-circle" onclick="showToast('Luna Vex — Artist of the Month 🎤')">🎤</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============= COLOR THEORY ============= -->
+<div class="ct-section" id="color-theory">
+
+  <!-- Modality Banner -->
+  <div style="background:linear-gradient(135deg,var(--pr-dk),#0A0F0F);border-top:3px solid var(--sc);border-bottom:1px solid var(--bd);padding:32px 48px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:20px">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--pr),var(--sc));display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🎨</div>
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--tm);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px">Modality · Website UI</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.06em">Music / Entertainment Platform</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:40px;align-items:center">
+      <div style="text-align:right">
+        <div style="font-family:'Space Mono',monospace;font-size:.6rem;color:var(--tm);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px">By</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.06em">Prakhar Srivastava</div>
+        <div style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--sc)">590017406</div>
+      </div>
+      <div style="width:1px;height:40px;background:var(--bd)"></div>
+      <div style="text-align:right">
+        <div style="font-family:'Space Mono',monospace;font-size:.6rem;color:var(--tm);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px">To</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.06em;color:var(--pr-lt)">Pankaj Badoni</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART A -->
+  <div class="explain-block">
+    <div class="part-lbl">
+      <span class="part-badge">PART A</span>
+      <span class="part-text">Color Wheel &amp; Schemes</span>
+    </div>
+
+    <!-- THEORY INTRO CALLOUT -->
+    <div class="theory-callout">
+      <div class="tc-icon">🎨</div>
+      <div>
+        <div class="tc-title">What is the Color Wheel?</div>
+        <p class="tc-body">The color wheel is the designer's most fundamental tool — a circular map of all colors arranged by their natural relationships. First described by <strong>Isaac Newton in 1666</strong> when he split white light through a prism, it reveals how colors are born, how they blend, and how they fight each other. Every intentional design decision in SŌNIC starts here.</p>
+      </div>
+    </div>
+
+    <!-- COLOR TYPES VISUAL -->
+    <div style="display:grid;grid-template-columns:280px 1fr;gap:48px;align-items:start;margin-bottom:56px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+        <canvas id="colorWheelCanvas" width="260" height="260"></canvas>
+        <div class="iw-tooltip" id="wheelTooltip" style="width:100%">
+          <div class="th" id="tt-name">Hover the wheel to explore</div>
+          <div id="tt-type" style="color:var(--tm);font-size:.68rem;margin-top:2px"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- Primary -->
+        <div class="ct-card">
+          <div class="ct-card-label">Primary</div>
+          <div class="ct-card-bar" style="height:64px;border-radius:6px;overflow:hidden;display:flex;margin:10px 0">
+            <div style="flex:1;background:#FF0000;display:flex;align-items:flex-end;padding:7px;font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.8)">Red<br>#FF0000</div>
+            <div style="flex:1;background:#FFCC00;display:flex;align-items:flex-end;padding:7px;font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(0,0,0,.65)">Yellow<br>#FFCC00</div>
+            <div style="flex:1;background:#0038A8;display:flex;align-items:flex-end;padding:7px;font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.8)">Blue<br>#0038A8</div>
+          </div>
+          <div class="ct-card-desc">The <strong>origin colors</strong> — they cannot be created by mixing anything else. Every color in existence is ultimately derived from these three. Think of them as the alphabet of color.</div>
+        </div>
+
+        <div style="padding-left:16px;font-size:.75rem;color:var(--tm);display:flex;align-items:center;gap:8px"><span style="color:var(--sc)">↓</span> Mix two primaries together</div>
+
+        <!-- Secondary -->
+        <div class="ct-card">
+          <div class="ct-card-label">Secondary</div>
+          <div class="ct-card-bar" style="height:64px;border-radius:6px;overflow:hidden;display:flex;margin:10px 0">
+            <div style="flex:1;background:#FF6600;display:flex;align-items:flex-end;padding:7px;font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(0,0,0,.65)">Orange<br>R+Y</div>
+            <div style="flex:1;background:#00AA00;display:flex;align-items:flex-end;padding:7px;font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.8)">Green<br>Y+B</div>
+            <div style="flex:1;background:#7700CC;display:flex;align-items:flex-end;padding:7px;font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.8)">Violet<br>B+R</div>
+          </div>
+          <div class="ct-card-desc">Mixing two primaries creates a secondary. Orange sits between Red and Yellow on the wheel — our <span style="color:var(--sc)">Burnt Orange (#F97316)</span> is a refined version of this secondary, pushed warmer to feel more energetic on screen.</div>
+        </div>
+
+        <div style="padding-left:16px;font-size:.75rem;color:var(--tm);display:flex;align-items:center;gap:8px"><span style="color:var(--sc)">↓</span> Mix primary + adjacent secondary</div>
+
+        <!-- Tertiary -->
+        <div class="ct-card" style="border-color:rgba(13,148,136,.35);background:rgba(13,148,136,.04)">
+          <div class="ct-card-label" style="color:var(--pr-lt)">Tertiary <span style="color:var(--sc);font-size:.65rem;margin-left:6px">← SŌNIC's Teal lives here</span></div>
+          <div style="height:56px;border-radius:6px;overflow:hidden;display:flex;margin:10px 0">
+            <div style="flex:1;background:#FF4400;display:flex;align-items:flex-end;padding:5px;font-family:'Space Mono',monospace;font-size:.48rem;color:rgba(255,255,255,.8)">R-O</div>
+            <div style="flex:1;background:#FFAA00;display:flex;align-items:flex-end;padding:5px;font-family:'Space Mono',monospace;font-size:.48rem;color:rgba(0,0,0,.7)">Y-O</div>
+            <div style="flex:1;background:#AADD00;display:flex;align-items:flex-end;padding:5px;font-family:'Space Mono',monospace;font-size:.48rem;color:rgba(0,0,0,.7)">Y-G</div>
+            <div style="flex:1;background:#0D9488;display:flex;align-items:flex-end;padding:5px;font-family:'Space Mono',monospace;font-size:.48rem;color:rgba(255,255,255,.9);outline:2px solid var(--sc);outline-offset:-2px;font-weight:700">B-G ★</div>
+            <div style="flex:1;background:#3311CC;display:flex;align-items:flex-end;padding:5px;font-family:'Space Mono',monospace;font-size:.48rem;color:rgba(255,255,255,.8)">B-V</div>
+            <div style="flex:1;background:#CC0066;display:flex;align-items:flex-end;padding:5px;font-family:'Space Mono',monospace;font-size:.48rem;color:rgba(255,255,255,.8)">R-V</div>
+          </div>
+          <div class="ct-card-desc">Six intermediate colors fill the gaps. <strong style="color:var(--pr-lt)">Blue-Green (Teal)</strong> is our primary brand color — it sits between calm Blue and fresh Green, giving SŌNIC a feeling of digital depth and reliability. It's not arbitrary; it's a deliberate position on the wheel.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 4 SCHEMES SECTION -->
+    <div class="theory-callout" style="margin-bottom:24px">
+      <div class="tc-icon">🔬</div>
+      <div>
+        <div class="tc-title">The 4 Color Schemes — and Why We Chose Complementary</div>
+        <p class="tc-body">A color <strong>scheme</strong> is the systematic rule for how colors relate on the wheel. It's not about picking colors you "like" — it's about picking a <em>relationship</em> that serves the design's emotion and purpose. Below are all four standard schemes. SŌNIC uses <span style="color:var(--sc)">Complementary</span> — here's why each option was considered.</p>
+      </div>
+    </div>
+
+    <div class="scheme-tabs">
+      <button class="stab" onclick="switchScheme('analogous',this)">Analogous</button>
+      <button class="stab active" onclick="switchScheme('complementary',this)">Complementary ✓</button>
+      <button class="stab" onclick="switchScheme('triadic',this)">Triadic</button>
+      <button class="stab" onclick="switchScheme('monochromatic',this)">Monochromatic</button>
+    </div>
+
+    <div class="scheme-panels">
+
+      <!-- ANALOGOUS -->
+      <div class="scheme-panel" id="panel-analogous">
+        <div class="sp-info" style="display:flex;flex-direction:column;gap:14px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--pr-lt)">Analogous</div>
+          <div style="display:flex;gap:0;height:72px;border-radius:8px;overflow:hidden">
+            <div style="flex:1;background:#0033CC"></div>
+            <div style="flex:1;background:#0066BB"></div>
+            <div style="flex:1;background:#0D9488"></div>
+            <div style="flex:1;background:#00BB88"></div>
+            <div style="flex:1;background:#00CC55"></div>
+          </div>
+          <div class="scheme-theory-block">
+            <div class="stb-label">The Concept</div>
+            <p>Colors that sit <strong>side-by-side</strong> on the wheel — they share undertones and feel naturally related. There's no tension, no fight. The eye moves easily across them like it would across a sunset.</p>
+          </div>
+          <div class="scheme-theory-block">
+            <div class="stb-label">Mood &amp; Emotion</div>
+            <p>Calm · Cohesive · Natural · Soothing. Great for designs that want to feel effortless or serene — wellness apps, nature photography, ambient experiences.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#E1306C,#F77737);flex-shrink:0"></div>
+            <div style="font-size:.75rem;color:var(--tm)"><strong style="color:var(--tx)">Real world:</strong> Instagram's gradient logo — pink flows into orange flows into yellow. All neighbors.</div>
+          </div>
+          <div class="scheme-verdict no">🚫 Not SŌNIC — A music platform needs <em>tension and contrast</em>. Analogous is too calm; it wouldn't make a "Play" button feel urgent.</div>
+        </div>
+        <div class="sp-visual" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+          <canvas id="mini-wheel-analogous" width="160" height="160" class="sp-wheel-mini"></canvas>
+          <div style="font-size:.7rem;color:var(--tm);text-align:center;font-family:'Space Mono',monospace">Adjacent segments · no contrast</div>
+        </div>
+      </div>
+
+      <!-- COMPLEMENTARY -->
+      <div class="scheme-panel active" id="panel-complementary">
+        <div class="sp-info" style="display:flex;flex-direction:column;gap:14px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--sc)">Complementary</div>
+          <div style="display:flex;gap:3px;height:72px;border-radius:8px;overflow:hidden">
+            <div style="flex:1;background:#0D9488;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1rem">#0D9488</div>
+            <div style="width:3px;background:var(--bg)"></div>
+            <div style="flex:1;background:#F97316;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#0A0F0F">#F97316</div>
+          </div>
+          <div class="scheme-theory-block" style="border-color:rgba(249,115,22,.25);background:rgba(249,115,22,.05)">
+            <div class="stb-label" style="color:var(--sc)">The Concept</div>
+            <p>Two colors <strong>directly opposite</strong> on the wheel — 180° apart. They have nothing in common, which is exactly what creates maximum visual tension and vibrancy. When placed side-by-side they make each other <em>appear more intense</em> — this is called <strong>simultaneous contrast</strong>.</p>
+          </div>
+          <div class="scheme-theory-block" style="border-color:rgba(249,115,22,.25);background:rgba(249,115,22,.05)">
+            <div class="stb-label" style="color:var(--sc)">Why It Works for Music</div>
+            <p>Music is built on contrast — verse vs chorus, build vs drop, loud vs quiet. Teal (cool, stable, trustworthy) vs Orange (warm, exciting, urgent) is that same emotional push-pull expressed in color. The <span style="color:var(--sc)">orange Play button</span> on a <span style="color:var(--pr-lt)">teal-accented dark stage</span> is impossible to ignore.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="width:13px;height:28px;background:#552583;border-radius:2px"></div>
+            <div style="width:13px;height:28px;background:#FDB927;border-radius:2px"></div>
+            <div style="font-size:.75rem;color:var(--tm);margin-left:4px"><strong style="color:var(--tx)">Real world:</strong> LA Lakers. Pure complementary — purple and gold fight and win together.</div>
+          </div>
+          <div class="scheme-verdict yes">✅ <strong>SŌNIC's choice.</strong> Teal = information, depth, trust. Orange = action, energy, play. The dark background acts as a concert stage — both colors glow harder in the dark.</div>
+        </div>
+        <div class="sp-visual" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+          <canvas id="mini-wheel-complementary" width="160" height="160" class="sp-wheel-mini"></canvas>
+          <div style="font-size:.7rem;color:var(--sc);text-align:center;font-family:'Space Mono',monospace">Opposite segments · 180° · max contrast</div>
+        </div>
+      </div>
+
+      <!-- TRIADIC -->
+      <div class="scheme-panel" id="panel-triadic">
+        <div class="sp-info" style="display:flex;flex-direction:column;gap:14px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--ac)">Triadic</div>
+          <div style="display:flex;gap:3px;height:72px;border-radius:8px;overflow:hidden">
+            <div style="flex:1;background:#FF3B30;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif">Red</div>
+            <div style="flex:1;background:#FFCC00;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;color:#0A0F0F">Yellow</div>
+            <div style="flex:1;background:#0038A8;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif">Blue</div>
+          </div>
+          <div class="scheme-theory-block">
+            <div class="stb-label">The Concept</div>
+            <p>Three colors placed <strong>120° apart</strong> — evenly triangulated around the wheel. Each color is different enough to stand out, but the triangular structure creates an underlying balance. It's the most colorful of all schemes.</p>
+          </div>
+          <div class="scheme-theory-block">
+            <div class="stb-label">Mood &amp; Emotion</div>
+            <p>Vibrant · Playful · Energetic · Colorful. Works best when one color dominates and the other two serve as accents — otherwise it can feel chaotic.</p>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <div style="width:10px;height:26px;background:#FF3B30;border-radius:2px"></div>
+            <div style="width:10px;height:26px;background:#FFCC00;border-radius:2px"></div>
+            <div style="width:10px;height:26px;background:#0038A8;border-radius:2px"></div>
+            <div style="font-size:.75rem;color:var(--tm);margin-left:8px"><strong style="color:var(--tx)">Real world:</strong> Classic primary color toys &amp; children's media — inherently triadic.</div>
+          </div>
+          <div class="scheme-verdict no">🚫 Not SŌNIC — Three strong hues make brand identity complex. A music app needs one dominant color for CTAs, not three competing for attention.</div>
+        </div>
+        <div class="sp-visual" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+          <canvas id="mini-wheel-triadic" width="160" height="160" class="sp-wheel-mini"></canvas>
+          <div style="font-size:.7rem;color:var(--tm);text-align:center;font-family:'Space Mono',monospace">Triangle · 3 equal points · 120° apart</div>
+        </div>
+      </div>
+
+      <!-- MONOCHROMATIC -->
+      <div class="scheme-panel" id="panel-monochromatic">
+        <div class="sp-info" style="display:flex;flex-direction:column;gap:14px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--pr-lt)">Monochromatic</div>
+          <div style="display:flex;gap:0;height:72px;border-radius:8px;overflow:hidden">
+            <div style="flex:1;background:#0A6E65"></div>
+            <div style="flex:1;background:#0D9488"></div>
+            <div style="flex:1;background:#14B8A6"></div>
+            <div style="flex:1;background:#5EDDD6"></div>
+            <div style="flex:1;background:#B2F0ED"></div>
+          </div>
+          <div class="scheme-theory-block">
+            <div class="stb-label">The Concept</div>
+            <p>One single hue in multiple <strong>shades</strong> (darker), <strong>tints</strong> (lighter with white), and <strong>tones</strong> (muted with grey). "Mono" = one, "chroma" = color. It's the most disciplined of all schemes — every color is literally the same color, just in different lighting.</p>
+          </div>
+          <div class="scheme-theory-block">
+            <div class="stb-label">Mood &amp; Emotion</div>
+            <p>Elegant · Minimal · Sophisticated · Premium. Zero color clashing is possible. The weakness is it can feel flat — there's no way to use color to guide the eye toward a CTA.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="width:28px;height:28px;border-radius:50%;background:#0ABAB5;flex-shrink:0"></div>
+            <div style="font-size:.75rem;color:var(--tm)"><strong style="color:var(--tx)">Real world:</strong> Tiffany &amp; Co. — one signature aqua used across every single touchpoint.</div>
+          </div>
+          <div class="scheme-verdict no">🚫 Not SŌNIC — Beautiful but impractical for interaction design. With one hue, an orange "Play" button is impossible — and that button is everything.</div>
+        </div>
+        <div class="sp-visual" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+          <canvas id="mini-wheel-monochromatic" width="160" height="160" class="sp-wheel-mini"></canvas>
+          <div style="font-size:.7rem;color:var(--tm);text-align:center;font-family:'Space Mono',monospace">One hue · shades &amp; tints only</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEME USED ID BAR -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px">
+      <div style="border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.06)">
+        <div style="height:5px;background:linear-gradient(90deg,#0033CC,#0D9488,#00CC55)"></div>
+        <div style="padding:14px;text-align:center"><div style="font-size:1.1rem;margin-bottom:4px">🚫</div><div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tm)">Analogous</div><div style="font-size:.65rem;color:var(--tm);margin-top:3px;font-family:'Space Mono',monospace">Too calm</div></div>
+      </div>
+      <div style="border-radius:8px;overflow:hidden;border:2px solid var(--sc);background:rgba(249,115,22,.05)">
+        <div style="height:5px;background:linear-gradient(90deg,var(--pr),var(--sc))"></div>
+        <div style="padding:14px;text-align:center"><div style="font-size:1.1rem;margin-bottom:4px">✅</div><div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--sc)">Complementary</div><div style="font-size:.65rem;color:var(--sc);margin-top:3px;font-family:'Space Mono',monospace">Used in SŌNIC</div></div>
+      </div>
+      <div style="border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.06)">
+        <div style="height:5px;background:linear-gradient(90deg,#FF3B30,#FFCC00,#0038A8)"></div>
+        <div style="padding:14px;text-align:center"><div style="font-size:1.1rem;margin-bottom:4px">🚫</div><div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tm)">Triadic</div><div style="font-size:.65rem;color:var(--tm);margin-top:3px;font-family:'Space Mono',monospace">Too complex</div></div>
+      </div>
+      <div style="border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.06)">
+        <div style="height:5px;background:linear-gradient(90deg,#0A6E65,#14B8A6,#B2F0ED)"></div>
+        <div style="padding:14px;text-align:center"><div style="font-size:1.1rem;margin-bottom:4px">🚫</div><div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tm)">Monochromatic</div><div style="font-size:.65rem;color:var(--tm);margin-top:3px;font-family:'Space Mono',monospace">No CTA contrast</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PART B -->
+  <div class="palette-section">
+    <div class="part-lbl">
+      <span class="part-badge">PART B</span>
+      <span class="part-text">Palette Applied to SŌNIC</span>
+    </div>
+
+    <div class="theory-callout">
+      <div class="tc-icon">🎯</div>
+      <div>
+        <div class="tc-title">Why These Specific Colors?</div>
+        <p class="tc-body">Picking a scheme is step one. Picking the <em>exact</em> colors within that scheme is step two — and it requires understanding color psychology. <span style="color:var(--sc)">Orange</span> = action, warmth, energy (every button, every play trigger). <span style="color:var(--pr-lt)">Teal</span> = trust, technology, depth (every badge, border, and progress bar). The near-black background behaves like a <strong>concert stage</strong> — spotlights always look brighter in the dark.</p>
+      </div>
+    </div>
+
+    <!-- WHY GRID -->
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.06em;color:var(--tm);margin:28px 0 14px">Why Complementary Works for a Music Platform</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:44px">
+      <div class="why-card"><div class="wc-icon">🎵</div><div><div class="wc-title">Energy = Contrast</div><div class="wc-body">Music is built on tension — drop, build, release. Teal (calm) vs Orange (energetic) is that same push-pull expressed visually. The colors feel like sound feels.</div></div></div>
+      <div class="why-card"><div class="wc-icon">🎯</div><div><div class="wc-title">Orange = Action</div><div class="wc-body">Every interactive element that asks you to <em>do something</em> — play, start, get started — is orange. Orange is warm, forward-moving, impossible to ignore.</div></div></div>
+      <div class="why-card"><div class="wc-icon">🌊</div><div><div class="wc-title">Teal = Depth &amp; Trust</div><div class="wc-body">Teal carries the calm of blue (reliable, digital, trustworthy) with a hint of green (fresh, alive). It tells you: this is information, this is structure, this is safe.</div></div></div>
+      <div class="why-card"><div class="wc-icon">🎭</div><div><div class="wc-title">The Stage Effect</div><div class="wc-body">Deep black background = concert lighting. Any color looks more vivid against near-black than against white or grey. The darkness amplifies both teal and orange simultaneously.</div></div></div>
+      <div class="why-card"><div class="wc-icon">⚡</div><div><div class="wc-title">Simultaneous Contrast</div><div class="wc-body">A law of optics: complementary colors placed side-by-side make each other appear <em>more saturated</em> than they actually are. Teal makes orange look more orange. Orange makes teal look more teal.</div></div></div>
+      <div class="why-card"><div class="wc-icon">🧠</div><div><div class="wc-title">Brand Distinctiveness</div><div class="wc-body">Spotify uses green. Apple Music uses red. Most music apps live in the warm-dark space. Teal-and-orange is uncommon enough to be memorable — users will recall SŌNIC by its colors alone.</div></div></div>
+    </div>
+
+    <!-- PALETTE BAR -->
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.06em;color:var(--tm);margin-bottom:8px">The 5-Color Palette</div>
+    <p style="font-size:.82rem;color:var(--tm);line-height:1.6;max-width:640px;margin-bottom:14px">5 colors, each with a deliberate purpose. The <span style="color:var(--pr-lt)">Teal + Orange</span> pair carries all the visual weight. <span style="color:var(--ac)">Amber</span> bridges them in gradients. Two near-blacks create depth without introducing a new hue. <strong style="color:var(--tx)">Hover each swatch ↓</strong></p>
+    <div class="palette-bar" id="palette-bar">
+      <div class="pb-swatch" style="background:#0D9488"><div class="pb-role" style="color:rgba(255,255,255,.65)">Primary</div><div class="pb-name">Teal</div><div class="pb-hex">#0D9488</div></div>
+      <div class="pb-swatch" style="background:#F97316"><div class="pb-role" style="color:rgba(0,0,0,.6)">Secondary</div><div class="pb-name" style="color:#0A0F0F">Burnt Orange</div><div class="pb-hex" style="color:rgba(0,0,0,.55)">#F97316</div></div>
+      <div class="pb-swatch" style="background:#FCD34D"><div class="pb-role" style="color:rgba(0,0,0,.55)">Accent</div><div class="pb-name" style="color:#0A0F0F">Amber</div><div class="pb-hex" style="color:rgba(0,0,0,.5)">#FCD34D</div></div>
+      <div class="pb-swatch" style="background:#0A0F0F;border-right:1px solid #1a2828"><div class="pb-role" style="color:rgba(255,255,255,.4)">Background</div><div class="pb-name" style="color:rgba(255,255,255,.7)">Deep Black</div><div class="pb-hex" style="color:rgba(255,255,255,.4)">#0A0F0F</div></div>
+      <div class="pb-swatch" style="background:#111A1A"><div class="pb-role" style="color:rgba(255,255,255,.4)">Surface</div><div class="pb-name" style="color:rgba(255,255,255,.7)">Dark Surface</div><div class="pb-hex" style="color:rgba(255,255,255,.4)">#111A1A</div></div>
+    </div>
+    <p style="font-size:.72rem;color:var(--tm);margin-bottom:36px;font-family:'Space Mono',monospace">↑ Hover each swatch to expand</p>
+
+    <div class="pd-cards">
+      <div class="pd-card"><div class="pd-sw" style="background:#0D9488"></div><div class="pd-body"><div class="pd-role p">Primary</div><div class="pd-name">Teal</div><div class="pd-hex">#0D9488</div><div class="pd-rgb">RGB(13, 148, 136)</div><div class="pd-use">Nav borders · badges · progress · hover states</div></div></div>
+      <div class="pd-card"><div class="pd-sw" style="background:#F97316"></div><div class="pd-body"><div class="pd-role s">Secondary</div><div class="pd-name">Burnt Orange</div><div class="pd-hex">#F97316</div><div class="pd-rgb">RGB(249, 115, 22)</div><div class="pd-use">All CTA buttons · play controls · active highlights</div></div></div>
+      <div class="pd-card"><div class="pd-sw" style="background:#FCD34D"></div><div class="pd-body"><div class="pd-role a">Accent</div><div class="pd-name">Amber</div><div class="pd-hex">#FCD34D</div><div class="pd-rgb">RGB(252, 211, 77)</div><div class="pd-use">Gradient endpoints · album art · stat counters</div></div></div>
+      <div class="pd-card"><div class="pd-sw" style="background:#0A0F0F;border-bottom:1px solid #1a2828"></div><div class="pd-body"><div class="pd-role b">Background</div><div class="pd-name">Deep Black</div><div class="pd-hex">#0A0F0F</div><div class="pd-rgb">RGB(10, 15, 15)</div><div class="pd-use">Page canvas — the "stage" that makes colors pop</div></div></div>
+      <div class="pd-card"><div class="pd-sw" style="background:#111A1A"></div><div class="pd-body"><div class="pd-role su">Surface</div><div class="pd-name">Dark Surface</div><div class="pd-hex">#111A1A</div><div class="pd-rgb">RGB(17, 26, 26)</div><div class="pd-use">Cards · nav bar · section containers</div></div></div>
+    </div>
+
+    <div style="margin-top:44px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.04em;margin-bottom:6px">Color in Use</div>
+      <p style="font-size:.8rem;color:var(--tm);line-height:1.6;margin-bottom:16px;max-width:560px">Orange = <em>do this</em>. Teal = <em>read this</em>. Every element in the UI follows the same rule — training the eye without saying a word.</p>
+      <div class="applied-grid">
+        <div class="app-card">
+          <div class="app-thumb">
+            <div class="mn" style="margin-bottom:10px"><div class="mn-logo">SŌ<span>N</span>IC</div><div class="mn-btns"><div class="mn-btn t">Log In</div><div class="mn-btn o">Get Started</div></div></div>
+            <div class="mn-hero"><div class="mn-ht">FEEL THE <span class="t">BEAT</span> &amp; <span class="o">VIBE</span></div><div class="mn-sub">Stream · Discover · Play</div><div class="mn-cta"><div class="mn-cb o">Start Listening</div><div class="mn-cb t">Charts</div></div></div>
+          </div>
+          <div class="app-cap">
+            <h4>Nav + Hero</h4>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+              <span class="use-tag o">Orange → CTA</span>
+              <span class="use-tag t">Teal → Secondary action</span>
+              <span class="use-tag n">Black → Stage depth</span>
+            </div>
+          </div>
+        </div>
+        <div class="app-card">
+          <div class="app-thumb">
+            <div class="mn-cards">
+              <div class="mn-card"><div class="mn-card-art a1">🎵</div><div class="mn-nm">Midnight Circuit</div><div style="margin-top:4px;display:flex;justify-content:space-between"><span style="font-size:.56rem;color:var(--tm)">2.4M</span><span style="font-size:.54rem;padding:2px 5px;border-radius:2px;background:rgba(13,148,136,.15);color:var(--pr-lt);border:1px solid rgba(13,148,136,.2)">Electronic</span></div></div>
+              <div class="mn-card"><div class="mn-card-art a2">🔥</div><div class="mn-nm">Solar Drift</div><div style="margin-top:4px;display:flex;justify-content:space-between"><span style="font-size:.56rem;color:var(--tm)">1.9M</span><span style="font-size:.54rem;padding:2px 5px;border-radius:2px;background:rgba(13,148,136,.15);color:var(--pr-lt);border:1px solid rgba(13,148,136,.2)">Synthwave</span></div></div>
+              <div class="mn-card"><div class="mn-card-art a3">🌊</div><div class="mn-nm">Tidal Rush</div><div style="margin-top:4px;display:flex;justify-content:space-between"><span style="font-size:.56rem;color:var(--tm)">980K</span><span style="font-size:.54rem;padding:2px 5px;border-radius:2px;background:rgba(13,148,136,.15);color:var(--pr-lt);border:1px solid rgba(13,148,136,.2)">Chill</span></div></div>
+            </div>
+            <div class="mn-player"><div class="mn-part"></div><div class="mn-pi"><div class="mn-pn">Neon Frequencies</div><div class="mn-pa" style="color:var(--tm)">Luna Vex</div><div class="mn-prog"><div class="mn-pf"></div></div></div><div class="mn-play">▶</div></div>
+          </div>
+          <div class="app-cap">
+            <h4>Cards + Player</h4>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+              <span class="use-tag o">Orange → Play button</span>
+              <span class="use-tag t">Teal → Genre tags</span>
+              <span class="use-tag g">Gradient → Teal→Orange in art</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RGB MODEL -->
+  <div class="rgb-section">
+    <div class="part-lbl">
+      <span class="part-badge" style="background:var(--pr)">RGB</span>
+      <span class="part-text">Additive Color Model</span>
+    </div>
+
+    <div class="theory-callout">
+      <div class="tc-icon">💡</div>
+      <div>
+        <div class="tc-title">How Screens Make Color — The RGB Model</div>
+        <p class="tc-body">Every pixel on your screen is a microscopic light source emitting exactly three colors: <strong style="color:#FF9999">Red</strong>, <strong style="color:#99FF99">Green</strong>, and <strong style="color:#9999FF">Blue</strong>. By mixing these three light beams at different intensities (0–255 each), screens can reproduce <strong>16.7 million unique colors</strong>. This is called <em>additive</em> color — because you add light, not subtract it. More light = brighter. All three at 255 = pure white. All three at 0 = pure black. This is fundamentally different from mixing paint.</p>
+      </div>
+    </div>
+
+    <div class="rgb-grid">
+      <div class="rgb-mixer">
+        <h4>Live RGB Mixer</h4>
+        <p class="rgb-mixer-sub">Drag sliders · Watch the color build from light</p>
+        <div class="rgb-preview" id="rgb-preview">rgb(128, 128, 128)</div>
+        <div class="rgb-sliders">
+          <div class="rgb-slider-row">
+            <span class="rgb-slider-lbl r">R</span>
+            <input type="range" class="rgb-slider r-sl" id="r-slider" min="0" max="255" value="128" oninput="updateRGB()">
+            <span class="rgb-val-num" id="r-val" style="color:#FF9999">128</span>
+          </div>
+          <div class="rgb-slider-row">
+            <span class="rgb-slider-lbl g">G</span>
+            <input type="range" class="rgb-slider g-sl" id="g-slider" min="0" max="255" value="128" oninput="updateRGB()">
+            <span class="rgb-val-num" id="g-val" style="color:#99FF99">128</span>
+          </div>
+          <div class="rgb-slider-row">
+            <span class="rgb-slider-lbl b">B</span>
+            <input type="range" class="rgb-slider b-sl" id="b-slider" min="0" max="255" value="128" oninput="updateRGB()">
+            <span class="rgb-val-num" id="b-val" style="color:#9999FF">128</span>
+          </div>
+        </div>
+        <div class="rgb-presets">
+          <div style="font-family:'Space Mono',monospace;font-size:.6rem;color:var(--tm);letter-spacing:.1em;text-transform:uppercase;width:100%;margin-bottom:6px">Try SŌNIC's palette ↓</div>
+          <button class="rgb-preset-btn" onclick="setRGB(13,148,136)">Teal</button>
+          <button class="rgb-preset-btn" onclick="setRGB(249,115,22)">Orange</button>
+          <button class="rgb-preset-btn" onclick="setRGB(252,211,77)">Amber</button>
+          <button class="rgb-preset-btn" onclick="setRGB(255,0,0)">Pure R</button>
+          <button class="rgb-preset-btn" onclick="setRGB(0,255,0)">Pure G</button>
+          <button class="rgb-preset-btn" onclick="setRGB(0,0,255)">Pure B</button>
+          <button class="rgb-preset-btn" onclick="setRGB(255,255,255)">White</button>
+          <button class="rgb-preset-btn" onclick="setRGB(0,0,0)">Black</button>
+        </div>
+      </div>
+
+      <div class="rgb-explanation">
+        <h3>Red · Green · <span>Blue</span></h3>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 20px">
+          <div style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:16px">
+            <div style="font-size:1.3rem;margin-bottom:6px">💡</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.06em;color:var(--sc);margin-bottom:4px">RGB — Screens</div>
+            <div style="font-size:.72rem;color:var(--tm);line-height:1.5">Additive model. Mix <em>light</em>. More channels = brighter. All three at max = White. Used for: monitors, phones, TVs, websites.</div>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:16px">
+            <div style="font-size:1.3rem;margin-bottom:6px">🖨️</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.06em;color:var(--tm);margin-bottom:4px">CMYK — Print</div>
+            <div style="font-size:.72rem;color:var(--tm);line-height:1.5">Subtractive model. Mix <em>ink</em>. More ink = darker. All four at max = Black. Used for: posters, books, packaging.</div>
+          </div>
+        </div>
+
+        <div style="position:relative;width:160px;height:134px;margin:0 auto 20px">
+          <div style="position:absolute;width:90px;height:90px;border-radius:50%;background:#FF0000;left:4px;top:22px;mix-blend-mode:screen;opacity:.88"></div>
+          <div style="position:absolute;width:90px;height:90px;border-radius:50%;background:#00FF00;left:66px;top:22px;mix-blend-mode:screen;opacity:.88"></div>
+          <div style="position:absolute;width:90px;height:90px;border-radius:50%;background:#0000FF;left:35px;top:0;mix-blend-mode:screen;opacity:.88"></div>
+        </div>
+
+        <div class="our-rgb">
+          <div class="ocr-title">SŌNIC Palette → RGB Values <span style="color:var(--tm);font-weight:400">(click to load in mixer)</span></div>
+          <div class="ocr-row" onclick="setRGB(13,148,136)" style="cursor:none"><div class="ocr-sw" style="background:#0D9488"></div><div class="ocr-name">Teal</div><div class="ocr-bars"><span class="ocr-v ocr-r">R:13</span><span class="ocr-v ocr-g">G:148</span><span class="ocr-v ocr-b">B:136</span></div></div>
+          <div class="ocr-row" onclick="setRGB(249,115,22)" style="cursor:none"><div class="ocr-sw" style="background:#F97316"></div><div class="ocr-name">Orange</div><div class="ocr-bars"><span class="ocr-v ocr-r">R:249</span><span class="ocr-v ocr-g">G:115</span><span class="ocr-v ocr-b">B:22</span></div></div>
+          <div class="ocr-row" onclick="setRGB(252,211,77)" style="cursor:none"><div class="ocr-sw" style="background:#FCD34D"></div><div class="ocr-name">Amber</div><div class="ocr-bars"><span class="ocr-v ocr-r">R:252</span><span class="ocr-v ocr-g">G:211</span><span class="ocr-v ocr-b">B:77</span></div></div>
+          <div class="ocr-row" onclick="setRGB(10,15,15)" style="cursor:none"><div class="ocr-sw" style="background:#0A0F0F;border:1px solid #222"></div><div class="ocr-name">Background</div><div class="ocr-bars"><span class="ocr-v ocr-r">R:10</span><span class="ocr-v ocr-g">G:15</span><span class="ocr-v ocr-b">B:15</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCLUSION -->
+  <div class="conclusion">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+      <div style="width:4px;height:44px;background:linear-gradient(var(--pr),var(--sc));border-radius:2px;flex-shrink:0"></div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:.04em">SŌNIC · <span style="color:var(--sc)">Color Theory</span> Summary</div>
+    </div>
+    <div class="con-pts">
+      <div class="con-pt" style="display:flex;flex-direction:column;gap:6px"><div style="font-size:1.2rem">🎡</div><div class="con-lbl">Color Wheel</div><div class="con-t">Primary → Secondary → Tertiary mapped. Teal identified as Blue-Green tertiary on the wheel.</div></div>
+      <div class="con-pt s" style="display:flex;flex-direction:column;gap:6px"><div style="font-size:1.2rem">🎨</div><div class="con-lbl s">4 Schemes</div><div class="con-t">All 4 explained with theory, mood, real-world examples, and rejection reasoning.</div></div>
+      <div class="con-pt" style="display:flex;flex-direction:column;gap:6px"><div style="font-size:1.2rem">🖌️</div><div class="con-lbl">Complementary</div><div class="con-t">Teal + Orange chosen: maximum contrast, simultaneous contrast law, music emotion match.</div></div>
+      <div class="con-pt s" style="display:flex;flex-direction:column;gap:6px"><div style="font-size:1.2rem">🎯</div><div class="con-lbl s">Palette</div><div class="con-t">5 colors with deliberate roles: action, information, accent, stage, surface.</div></div>
+      <div class="con-pt" style="display:flex;flex-direction:column;gap:6px"><div style="font-size:1.2rem">💡</div><div class="con-lbl">RGB Model</div><div class="con-t">Additive light model explained. All palette colors broken into R·G·B channels.</div></div>
+      <div class="con-pt s" style="display:flex;flex-direction:column;gap:6px"><div style="font-size:1.2rem">📐</div><div class="con-lbl s">Applied</div><div class="con-t">Every UI element — nav, hero, cards, player, badges — follows the scheme deliberately.</div></div>
+    </div>
+  </div>
+</div>
+<!-- MINI PLAYER -->
+<div id="mini-player">
+  <div class="mp-art"><div class="mp-art-inner mp-spin" id="mp-spin">🎵</div></div>
+  <div class="mp-info">
+    <div class="mp-title" id="mp-title">Midnight Circuit</div>
+    <div class="mp-artist" id="mp-artist">Echo Chamber · Electronic</div>
+  </div>
+  <div class="mp-controls">
+    <button class="mp-btn" onclick="prevTrack()">⏮</button>
+    <button class="mp-play" id="mp-play-btn" onclick="togglePlay()">▶</button>
+    <button class="mp-btn" onclick="nextTrack()">⏭</button>
+  </div>
+  <div class="mp-progress-wrap">
+    <span class="mp-time" id="mp-cur">0:00</span>
+    <div class="mp-bar" id="mp-bar" onclick="seekTo(event)">
+      <div class="mp-bar-fill" id="mp-fill" style="width:0%"></div>
+      <div class="mp-bar-thumb"></div>
+    </div>
+    <span class="mp-time" id="mp-dur">3:24</span>
+  </div>
+  <div class="mp-vol">
+    <span style="font-size:.9rem">🔊</span>
+    <div class="mp-vol-bar" onclick="setVolume(event)"><div class="mp-vol-fill" id="vol-fill"></div></div>
+  </div>
+  <button class="mp-like" id="like-btn" onclick="toggleLike()">♡</button>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">SŌ<span>N</span>IC</div>
+  <div class="foot-note">Website UI <span class="fdot"></span> Music Platform <span class="fdot"></span> Complementary Scheme <span class="fdot"></span> Prakhar Srivastava</div>
+</footer>
+
+<script>
+// ======== DATA ========
+const tracks = [
+  {title:'Midnight Circuit',artist:'Echo Chamber',genre:'Electronic',plays:'2.4M',art:'art1',emoji:'🎵',dur:204},
+  {title:'Solar Drift',artist:'Tangerine Sky',genre:'Synthwave',plays:'1.9M',art:'art2',emoji:'🔥',dur:187},
+  {title:'Deep Horizon',artist:'Aqua Pulse',genre:'Ambient',plays:'1.6M',art:'art3',emoji:'🎶',dur:234},
+  {title:'Golden Hour',artist:'Nova Bright',genre:'Indie Pop',plays:'1.1M',art:'art4',emoji:'✨',dur:198},
+  {title:'Tidal Rush',artist:'Cerulean Drift',genre:'Chillwave',plays:'980K',art:'art5',emoji:'🌊',dur:215}
+];
+let curTrack=0, isPlaying=false, liked=false, progress=0, progInterval=null;
+
+// ======== CURSOR ========
+const curEl=document.getElementById('cur');
+const ringEl=document.getElementById('cur-ring');
+const trailEl=document.getElementById('cur-trail');
+let mx=0,my=0,rx=0,ry=0,tx2=0,ty2=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  curEl.style.left=mx+'px';curEl.style.top=my+'px';
+  spawnRipple(mx,my);
+});
+(function animFollowers(){
+  rx+=(mx-rx)*.12;ry+=(my-ry)*.12;
+  tx2+=(mx-tx2)*.055;ty2+=(my-ty2)*.055;
+  ringEl.style.left=Math.round(rx)+'px';ringEl.style.top=Math.round(ry)+'px';
+  trailEl.style.left=Math.round(tx2)+'px';trailEl.style.top=Math.round(ty2)+'px';
+  requestAnimationFrame(animFollowers);
+})();
+document.querySelectorAll('button,a,.track-card,.pd-card,.pb-swatch,.app-card,.rgb-preset-btn,.stab,.ocr-row,.ct-card,.theory-block').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{document.body.classList.add('cur-hover')});
+  el.addEventListener('mouseleave',()=>{document.body.classList.remove('cur-hover')});
+});
+
+// ======== BG RIPPLE CANVAS ========
+const rippleCanvas=document.getElementById('bg-ripple');
+const rippleCtx=rippleCanvas.getContext('2d');
+let ripples=[];
+function resizeRipple(){rippleCanvas.width=window.innerWidth;rippleCanvas.height=window.innerHeight}
+resizeRipple();window.addEventListener('resize',resizeRipple);
+
+function spawnRipple(x,y){
+  if(Math.random()>.18)return; // sparse — only 18% of moves spawn one
+  const isOrange=Math.random()>.5;
+  ripples.push({x,y,r:0,maxR:Math.random()*80+40,alpha:.18,color:isOrange?'249,115,22':'13,148,136',speed:Math.random()*1.2+.6});
+}
+
+function animRipples(){
+  rippleCtx.clearRect(0,0,rippleCanvas.width,rippleCanvas.height);
+  ripples=ripples.filter(rp=>rp.alpha>0.005);
+  ripples.forEach(rp=>{
+    rp.r+=rp.speed;
+    rp.alpha*=0.94;
+    const grad=rippleCtx.createRadialGradient(rp.x,rp.y,rp.r*.3,rp.x,rp.y,rp.r);
+    grad.addColorStop(0,`rgba(${rp.color},${rp.alpha*.6})`);
+    grad.addColorStop(.5,`rgba(${rp.color},${rp.alpha})`);
+    grad.addColorStop(1,`rgba(${rp.color},0)`);
+    rippleCtx.beginPath();
+    rippleCtx.arc(rp.x,rp.y,rp.r,0,Math.PI*2);
+    rippleCtx.fillStyle=grad;
+    rippleCtx.fill();
+  });
+  requestAnimationFrame(animRipples);
+}
+animRipples();
+
+// ======== TOAST ========
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ======== PARTICLES ========
+const canvas=document.getElementById('particles');
+const ctx=canvas.getContext('2d');
+let particles=[];
+function resizeCanvas(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight}
+resizeCanvas();window.addEventListener('resize',()=>{resizeCanvas();particles=[];initParticles()});
+function initParticles(){
+  for(let i=0;i<55;i++){
+    particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.8+.4,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,c:Math.random()>.5?'rgba(13,148,136,':'rgba(249,115,22,',a:Math.random()*.4+.1});
+  }
+}
+initParticles();
+function animParticles(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.c+p.a+')';ctx.fill();
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;
+    if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;
+  });
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+// ======== COUNTER ANIMATION ========
+function animCount(el,target,suffix,decimals=0){
+  let n=0,step=target/60;
+  const iv=setInterval(()=>{
+    n=Math.min(n+step,target);
+    el.innerHTML=(decimals?n.toFixed(1):Math.floor(n))+'<span>'+suffix+'</span>';
+    if(n>=target)clearInterval(iv);
+  },16);
+}
+setTimeout(()=>{animCount(document.getElementById('scount'),80,'M+');animCount(document.getElementById('acount'),12,'M');animCount(document.getElementById('gcount'),4,'K')},400);
+
+// ======== TRACKS ========
+function buildTracks(){
+  const grid=document.getElementById('tracks-grid');
+  tracks.forEach((t,i)=>{
+    grid.innerHTML+=`<div class="track-card" id="tc-${i}" onclick="playTrack(${i})">
+      <div class="track-rank">0${i+1}</div>
+      <div class="track-art ${t.art}">
+        ${t.emoji}
+        <div class="play-overlay"><div class="play-overlay-btn">▶</div></div>
+      </div>
+      <div class="track-name">${t.title}</div>
+      <div class="track-by">${t.artist}</div>
+      <div class="track-meta">
+        <span class="track-plays">${t.plays} plays</span>
+        <span class="track-genre">${t.genre}</span>
+      </div>
+      <div class="wave-anim" id="wave-${i}" style="display:none">
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+      </div>
+    </div>`;
+  });
+}
+buildTracks();
+
+// ======== PLAYER ========
+function playTrack(i){
+  document.querySelectorAll('.track-card').forEach((el,j)=>{
+    el.classList.toggle('playing',j===i);
+    const w=document.getElementById('wave-'+j);
+    if(w)w.style.display=j===i?'flex':'none';
+  });
+  curTrack=i;
+  const t=tracks[i];
+  document.getElementById('mp-title').textContent=t.title;
+  document.getElementById('mp-artist').textContent=t.artist+' · '+t.genre;
+  document.getElementById('mp-dur').textContent=fmtTime(t.dur);
+  document.getElementById('mp-spin').textContent=t.emoji;
+  document.getElementById('mini-player').classList.add('visible');
+  isPlaying=true;
+  document.getElementById('mp-play-btn').textContent='⏸';
+  document.getElementById('mp-spin').classList.add('playing');
+  progress=0;startProgress();
+  showToast('Now Playing: '+t.title+' '+t.emoji);
+}
+function togglePlay(){
+  isPlaying=!isPlaying;
+  document.getElementById('mp-play-btn').textContent=isPlaying?'⏸':'▶';
+  document.getElementById('mp-spin').classList.toggle('playing',isPlaying);
+  if(isPlaying)startProgress();else clearInterval(progInterval);
+}
+function nextTrack(){playTrack((curTrack+1)%tracks.length)}
+function prevTrack(){playTrack((curTrack-1+tracks.length)%tracks.length)}
+function startProgress(){
+  clearInterval(progInterval);
+  progInterval=setInterval(()=>{
+    if(!isPlaying)return;
+    progress+=100/tracks[curTrack].dur;
+    if(progress>=100){progress=0;nextTrack();return}
+    document.getElementById('mp-fill').style.width=progress+'%';
+    document.getElementById('mp-cur').textContent=fmtTime(tracks[curTrack].dur*progress/100);
+  },1000);
+}
+function seekTo(e){
+  const bar=document.getElementById('mp-bar');
+  const pct=(e.clientX-bar.getBoundingClientRect().left)/bar.offsetWidth;
+  progress=Math.max(0,Math.min(100,pct*100));
+  document.getElementById('mp-fill').style.width=progress+'%';
+  document.getElementById('mp-cur').textContent=fmtTime(tracks[curTrack].dur*progress/100);
+}
+function setVolume(e){
+  const bar=e.currentTarget;
+  const pct=(e.clientX-bar.getBoundingClientRect().left)/bar.offsetWidth;
+  document.getElementById('vol-fill').style.width=Math.max(0,Math.min(100,pct*100))+'%';
+}
+function toggleLike(){
+  liked=!liked;
+  const btn=document.getElementById('like-btn');
+  btn.textContent=liked?'♥':'♡';
+  btn.classList.toggle('liked',liked);
+  if(liked)showToast('Added to your Liked Songs ♥');
+}
+function fmtTime(s){const m=Math.floor(s/60);return m+':'+(Math.floor(s%60)).toString().padStart(2,'0')}
+
+// ======== COLOR WHEEL CANVAS ========
+const wheelColors=[
+  {name:'Red',type:'Primary',hex:'#FF0000',angle:0},
+  {name:'Red-Orange',type:'Tertiary',hex:'#FF4400',angle:30},
+  {name:'Orange',type:'Secondary',hex:'#FF8800',angle:60},
+  {name:'Yellow-Orange',type:'Tertiary',hex:'#FFAA00',angle:90},
+  {name:'Yellow',type:'Primary',hex:'#FFDD00',angle:120},
+  {name:'Yellow-Green',type:'Tertiary',hex:'#AADD00',angle:150},
+  {name:'Green',type:'Secondary',hex:'#00BB00',angle:180},
+  {name:'Blue-Green (Teal)',type:'Tertiary',hex:'#0D9488',angle:210},
+  {name:'Blue',type:'Primary',hex:'#0044CC',angle:240},
+  {name:'Blue-Violet',type:'Tertiary',hex:'#3311CC',angle:270},
+  {name:'Violet',type:'Secondary',hex:'#7700CC',angle:300},
+  {name:'Red-Violet',type:'Tertiary',hex:'#CC0066',angle:330}
+];
+function drawColorWheel(){
+  const cv=document.getElementById('colorWheelCanvas');
+  const c=cv.getContext('2d');
+  const cx=130,cy=130,R=108,r=52;
+  const seg=Math.PI*2/12;
+  wheelColors.forEach((col,i)=>{
+    const s=i*seg-Math.PI/2-seg/2;
+    const e=s+seg;
+    c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,R,s,e);c.closePath();
+    c.fillStyle=col.hex;c.fill();
+    c.strokeStyle='rgba(10,15,15,.5)';c.lineWidth=1.5;c.stroke();
+  });
+  // inner ring
+  c.beginPath();c.arc(cx,cy,r+4,0,Math.PI*2);
+  c.fillStyle='rgba(10,15,15,.9)';c.fill();
+  // Complementary line
+  const tealAngle=(210-90)*Math.PI/180;
+  const orangeAngle=(60-90)*Math.PI/180;
+  const tx=cx+Math.cos(tealAngle)*80,ty=cy+Math.sin(tealAngle)*80;
+  const ox=cx+Math.cos(orangeAngle)*80,oy=cy+Math.sin(orangeAngle)*80;
+  c.beginPath();c.moveTo(tx,ty);c.lineTo(ox,oy);
+  c.strokeStyle='rgba(249,115,22,.5)';c.lineWidth=1.5;c.setLineDash([5,3]);c.stroke();c.setLineDash([]);
+  // Highlight teal & orange
+  [[tealAngle,'#0D9488'],[orangeAngle,'#F97316']].forEach(([ang,col])=>{
+    const x=cx+Math.cos(ang)*80,y=cy+Math.sin(ang)*80;
+    c.beginPath();c.arc(x,y,11,0,Math.PI*2);
+    c.strokeStyle=col;c.lineWidth=2.5;c.stroke();
+  });
+  // Center text
+  c.fillStyle='#14B8A6';c.font='bold 9px Space Mono,monospace';c.textAlign='center';c.fillText('COLOR',cx,cy-4);
+  c.fillStyle='#F97316';c.fillText('WHEEL',cx,cy+8);
+}
+drawColorWheel();
+
+// Hover interaction on wheel
+document.getElementById('colorWheelCanvas').addEventListener('mousemove',function(e){
+  const rect=this.getBoundingClientRect();
+  const cx=130,cy=130;
+  const x=e.clientX-rect.left,y=e.clientY-rect.top;
+  const dx=x-cx,dy=y-cy,dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist>52&&dist<110){
+    let angle=(Math.atan2(dy,dx)+Math.PI/2+Math.PI*2)%(Math.PI*2);
+    const idx=Math.floor(angle/(Math.PI*2/12))%12;
+    const col=wheelColors[idx];
+    document.getElementById('tt-name').textContent=col.name+' — '+col.hex;
+    document.getElementById('tt-type').textContent=col.type+' Color';
+    document.getElementById('wheelTooltip').style.borderColor=col.hex;
+  }
+});
+
+// ======== MINI SCHEME WHEELS ========
+function drawMiniWheel(id,highlightIdxs,lineIdxs){
+  const cv=document.getElementById(id);if(!cv)return;
+  const c=cv.getContext('2d');
+  const cx=80,cy=80,R=70,r=28;
+  const seg=Math.PI*2/12;
+  const cols=['#FF0000','#FF4400','#FF8800','#FFAA00','#FFDD00','#AADD00','#00BB00','#0D9488','#0044CC','#3311CC','#7700CC','#CC0066'];
+  cols.forEach((col,i)=>{
+    const s=i*seg-Math.PI/2-seg/2,e=s+seg;
+    c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,R,s,e);c.closePath();
+    c.fillStyle=col;c.globalAlpha=highlightIdxs.includes(i)?1:.28;c.fill();
+    c.globalAlpha=1;c.strokeStyle='rgba(10,15,15,.5)';c.lineWidth=1;c.stroke();
+  });
+  c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fillStyle='#0A0F0F';c.fill();
+  if(lineIdxs){
+    lineIdxs.forEach(pair=>{
+      const [a,b]=pair;
+      const a1=(a/12*Math.PI*2)-Math.PI/2,a2=(b/12*Math.PI*2)-Math.PI/2;
+      const x1=cx+Math.cos(a1)*55,y1=cy+Math.sin(a1)*55;
+      const x2=cx+Math.cos(a2)*55,y2=cy+Math.sin(a2)*55;
+      c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);
+      c.strokeStyle='rgba(249,115,22,.6)';c.lineWidth=1.5;c.setLineDash([4,2]);c.stroke();c.setLineDash([]);
+    });
+  }
+  highlightIdxs.forEach(i=>{
+    const a=(i/12*Math.PI*2)-Math.PI/2;
+    const x=cx+Math.cos(a)*52,y=cy+Math.sin(a)*52;
+    c.beginPath();c.arc(x,y,7,0,Math.PI*2);c.strokeStyle='#fff';c.lineWidth=2;c.stroke();
+  });
+}
+drawMiniWheel('mini-wheel-analogous',[6,7,8],null);
+drawMiniWheel('mini-wheel-complementary',[2,7],[[2,7]]);
+drawMiniWheel('mini-wheel-triadic',[0,4,8],[[0,4],[4,8],[8,0]]);
+drawMiniWheel('mini-wheel-monochromatic',[7],null);
+
+// ======== SCHEME SWITCHER ========
+function switchScheme(name,btn){
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.scheme-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+}
+
+// ======== RGB MIXER ========
+function updateRGB(){
+  const r=document.getElementById('r-slider').value;
+  const g=document.getElementById('g-slider').value;
+  const b=document.getElementById('b-slider').value;
+  document.getElementById('r-val').textContent=r;
+  document.getElementById('g-val').textContent=g;
+  document.getElementById('b-val').textContent=b;
+  const hex='#'+[+r,+g,+b].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
+  const brightness=(+r*.299)+(+g*.587)+(+b*.114);
+  const preview=document.getElementById('rgb-preview');
+  preview.style.background=`rgb(${r},${g},${b})`;
+  preview.style.color=brightness>128?'rgba(0,0,0,0.7)':'rgba(255,255,255,0.8)';
+  preview.textContent=`rgb(${r}, ${g}, ${b})  |  ${hex}`;
+}
+function setRGB(r,g,b){
+  document.getElementById('r-slider').value=r;
+  document.getElementById('g-slider').value=g;
+  document.getElementById('b-slider').value=b;
+  updateRGB();
+}
+updateRGB();
+
+// ======== SCROLL REVEAL ========
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}});
+},{threshold:.08});
+document.querySelectorAll('.track-card,.pd-card,.app-card,.con-pt,.why-pt,.id-item').forEach(el=>{
+  el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity .5s ease,transform .5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
