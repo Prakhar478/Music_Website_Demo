@@ -2555,6 +2555,7 @@ footer {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--pr-lt)
+<<<<<<< HEAD
 }
 /* ══════════════════════════════════════════
    NEW SECTIONS — Color Meaning, Harmony, CTA
@@ -2655,3 +2656,6 @@ body {
 .harmony-btn { font-family: 'Space Mono', monospace; }
 .stab { padding:8px 18px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:var(--tm); border-radius:4px; font-family:'Space Mono',monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; cursor:none; transition:all 0.2s; }
 .stab.active,.stab:hover { border-color:var(--sc); color:var(--sc); background:rgba(249,115,22,0.08); }
+=======
+}
+>>>>>>> 45882a0ded7f0c297a795e313f9cd5140dbafa1b
